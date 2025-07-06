@@ -14,6 +14,9 @@ COPY package*.json ./
 # RUN yarn install --frozen-lockfile
 RUN npm install
 
+# Copy the .env file first
+COPY .env ./
+
 # Copy the rest of the application code
 COPY . .
 
@@ -31,33 +34,15 @@ FROM nginx:stable-alpine AS production
 # if your Vite build output directory is different (e.g., /app/build)
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy a custom Nginx configuration file (optional)
-# If you want Nginx to listen on a different port *inside* the container,
-# you'll need a custom nginx.conf.
-# For example, if you want Nginx to listen on 8080 internally:
-# 1. Create an nginx.conf file with:
-#    server {
-#        listen 8080;
-#        server_name localhost;
-#        root /usr/share/nginx/html;
-#        index index.html index.htm;
-#        location / {
-#            try_files $uri $uri/ /index.html;
-#        }
-#    }
-# 2. Uncomment the following line:
+# Copy a custom Nginx configuration file
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-# 3. Make sure the EXPOSE instruction below matches the port Nginx listens on.
-# By default, Nginx listens on port 80.
 
-# Expose the desired port.
-# Change this to the port you want your container to expose.
-# For example, to use port 8080:
+# Copy the environment script and make it executable
+COPY env.sh /docker-entrypoint.d/env.sh
+RUN chmod +x /docker-entrypoint.d/env.sh
+
+# Expose the desired port
 EXPOSE 80
-# If you didn't provide a custom nginx.conf for Nginx to listen on 8080 internally,
-# Nginx will still listen on port 80 inside the container.
-# The EXPOSE instruction is documentation for which port the application *intends* to use.
-# You will then map this container port to a host port when running the container.
 
 # Start Nginx when the container launches
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "/docker-entrypoint.d/env.sh && nginx -g 'daemon off;'"]
