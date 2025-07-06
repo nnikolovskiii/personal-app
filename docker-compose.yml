@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:4.4
     container_name: personal-site-mongodb
     ports:
       - "27017:27017"
@@ -42,7 +42,7 @@ services:
       dockerfile: Dockerfile
     container_name: personal-site-frontend
     ports:
-      - "80:80"
+      - "5002:80"
     env_file:
       - ./frontend/.env
     depends_on:
